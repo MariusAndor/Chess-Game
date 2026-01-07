@@ -190,6 +190,12 @@ int main(int argc, char** argv)
 
         }
 
+        if(strcmp(message,"quit") == 0)
+        {
+            printf("Other player quited the game... YOU WON CONGRATZZ!!!\n");
+            break;
+        }
+
     }
     
     return 0;
