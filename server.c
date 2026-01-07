@@ -120,7 +120,7 @@ int sendMessageToClient(int client_fd, char* message)
 int readMessageFromClient(int client_fd,char* message)
 {
     int bytesRead = recv(client_fd,message,SIZE_OF_MESSAGE-1,0);
-    if(read <= 0)
+    if(bytesRead <= 0)
     {
         message[0] = 0;
         return -1;
@@ -149,32 +149,64 @@ void initGameTurns(int firstPlayer, int secondPlayer,char* initMessage)
 {
     sendMessageToClient(firstPlayer,initMessage);
     sendMessageToClient(secondPlayer,initMessage);
+
+    usleep(500000);
 }
 
-void firstPlayerMove(int firstPlayer, char* message, char* waitMessage, char* yourTurnMessage)
+int firstPlayerMove(int firstPlayer, char* message, char* waitMessage, char* yourTurnMessage)
 {
-    printf("Waiting for message from client 1....\n");
+    printf("Waiting for message from client %d....\n",firstPlayer);
     
     sendMessageToClient(firstPlayer,yourTurnMessage);
-    readMessageFromClient(firstPlayer,message);
+    
+    if(readMessageFromClient(firstPlayer,message) == -1)
+    {
+        return -1;
+    }
+
+    if(strcmp(message,"quit") == 0)
+    {
+        return -1;
+    }
+
     sendMessageToClient(firstPlayer,waitMessage);
 
-    printf(" -> from player 1: %s\n",message);
+    printf(" -> from player %d: %s\n",firstPlayer,message);
+
+    return 0;
 }
 
-void secondPlayerMove(int secondPlayer, char* message, char* waitMessage, char* yourTurnMessage)
+int secondPlayerMove(int secondPlayer, char* message, char* waitMessage, char* yourTurnMessage)
 {
-    printf("Waiting for message from client 2....\n");
+    printf("Waiting for message from client %d....\n",secondPlayer);
    
     sendMessageToClient(secondPlayer,yourTurnMessage);
-    readMessageFromClient(secondPlayer,message);
+    
+    if(readMessageFromClient(secondPlayer,message) == -1)
+    {
+        return -1;
+    }
+
+    if(strcmp(message,"quit") == 0)
+    {
+        return -1;
+    }
+    
     sendMessageToClient(secondPlayer,waitMessage);
     
-    printf(" -> from player 2: %s\n",message);
+    printf(" -> from player %d: %s\n",secondPlayer,message);
+
+    return 0;
 }
 
 void* startGame(void* descriptors)
 {
+    if(pthread_detach(pthread_self()) != 0)
+    {
+        printf("Error at detaching the thread\n");
+        return NULL;
+    }
+
     descriptors_t* client_descriptors = (descriptors_t*)descriptors;
     int firstPlayerFd = client_descriptors->client_one;
     int secondPlayerFd = client_descriptors->client_two;
@@ -186,22 +218,44 @@ void* startGame(void* descriptors)
     char waitMessage[SIZE_OF_MESSAGE];
     char yourTurnMessage[SIZE_OF_MESSAGE];
     char initGameTurnsMessage[SIZE_OF_MESSAGE];
+    char quitMessage[SIZE_OF_MESSAGE];
 
     strcpy(waitMessage,"wait");
     strcpy(yourTurnMessage,"yourTurn");
     strcpy(initGameTurnsMessage,"initialize");
+    strcpy(quitMessage,"quit");
 
     // PUTING BOTH CLIENTS ON WAIT
     initGameTurns(firstPlayerFd,secondPlayerFd,initGameTurnsMessage);
 
-
+    
     // ======= TO DO implement quit command ====
     while(!gameIsOver())
     {
 
-        firstPlayerMove(firstPlayerFd,receivedMessage,waitMessage,yourTurnMessage);
+        if(firstPlayerMove(firstPlayerFd,receivedMessage,waitMessage,yourTurnMessage) == -1)
+        {
+            usleep(500000);
+            sendMessageToClient(secondPlayerFd,quitMessage);
 
-        secondPlayerMove(secondPlayerFd,receivedMessage,waitMessage,yourTurnMessage);
+            closeConnectionWithClients(firstPlayerFd,secondPlayerFd);
+
+            printf("Game for players: %d and %d has been forcefully ended \n",firstPlayerFd,secondPlayerFd);
+
+            break;
+        }
+
+        if(secondPlayerMove(secondPlayerFd,receivedMessage,waitMessage,yourTurnMessage) == -1)
+        {
+            usleep(500000);
+            sendMessageToClient(firstPlayerFd,quitMessage);
+
+            closeConnectionWithClients(firstPlayerFd,secondPlayerFd);
+
+            printf("Game for players: %d and %d has been forcefully ended \n",firstPlayerFd,secondPlayerFd);
+
+            break;
+        }
 
     }
 
@@ -225,9 +279,6 @@ int createGame(int client_one,int client_two)
         printf("Error at creating game\n");
         return -2;
     }
-
-    // TO DO
-    // close threads 
 
     return 0;
 }
