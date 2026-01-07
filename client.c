@@ -8,10 +8,7 @@
 #define PORT 8080
 #define SIZE_OF_MESSAGE 128
 
-// === GLOBAL DEFINES FOR BOTH client AND server
-#define MAX_LENGTH_OF_A_MESSAGE 128
 #define DEBUG 1
-
 
 
 int connectWithServer(int* client_fd,struct sockaddr_in* serverAddress)
@@ -63,30 +60,39 @@ int sendMessageToServer(int client_fd,char* message)
     }
     return 0;
 }
-
-char* receiveMessageFromServer(int client_fd)
+char *receiveMessageFromServer(int client_fd)
 {
-    char* message = malloc(sizeof(char)*SIZE_OF_MESSAGE);
-    if(message == NULL)
-    {
-        perror("Error at malloc \n");
+    char *message = malloc(SIZE_OF_MESSAGE);
+    if (!message) {
+        perror("malloc");
         return NULL;
     }
 
-    if(recv(client_fd,message,SIZE_OF_MESSAGE,0) == -1)
-    {
-        perror("Error at receveing message from server\n");
+    int bytes = recv(client_fd, message, SIZE_OF_MESSAGE - 1, 0);
+
+    if (bytes == 0) {
+        printf("The server ended the connection\n");
+        free(message);
         return NULL;
     }
+
+    if (bytes < 0) {
+        perror("recv");
+        free(message);
+        return NULL;
+    }
+
+    message[bytes] = '\0';
 
     return message;
 }
+
 
 int getMessageFromTerminal(char* message)
 {
     printf(" your next move: ");
 
-    if(fgets(message,MAX_LENGTH_OF_A_MESSAGE-1,stdin) == NULL)
+    if(fgets(message,SIZE_OF_MESSAGE-1,stdin) == NULL)
     {
         perror("Error at reading messaged from terminal\n");
         return -1;
