@@ -229,7 +229,6 @@ void* startGame(void* descriptors)
     initGameTurns(firstPlayerFd,secondPlayerFd,initGameTurnsMessage);
 
     
-    // ======= TO DO implement quit command ====
     while(!gameIsOver())
     {
 
@@ -259,6 +258,12 @@ void* startGame(void* descriptors)
 
     }
 
+    // TO DO
+    // REMATCH
+    // OR END CONNECTIONS
+
+    closeConnectionWithClients(firstPlayerFd,secondPlayerFd);
+
     return NULL;
 }
 
@@ -283,8 +288,6 @@ int createGame(int client_one,int client_two)
     return 0;
 }
 
-// TO DO
-// CLOSE CONNECTION FOR EVERY CLIENT
 
 int main(int argc, char** argv)
 {
