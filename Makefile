@@ -1,23 +1,29 @@
 CC = gcc
-CFLAGS = -Wall 
+CFLAGS = -Wall
+LIBS = -lncursesw
 
-all: server client 
+SERVER_OBJS = server.o GUI.o chessLogic.o
+CLIENT_OBJS = client.o GUI.o chessLogic.o
 
-server: server.o
-	$(CC) $(CFLAGS) server.o -o server
+all: server client
 
-client: client.o
-	$(CC) $(CFLAGS) client.o -o client
+server: $(SERVER_OBJS)
+	$(CC) $(CFLAGS) $(SERVER_OBJS) -o server $(LIBS)
 
-server.o: server.c
-	$(CC) $(CFLAGS) -c server.c -o server.o
+client: $(CLIENT_OBJS)
+	$(CC) $(CFLAGS) $(CLIENT_OBJS) -o client $(LIBS)
 
-client.o: client.c
-	$(CC) $(CFLAGS) -c client.c -o client.o
+server.o: server.c GUI.h chessLogic.h
+	$(CC) $(CFLAGS) -c server.c
 
-run_both:
-	./server & 
-	./client
+client.o: client.c GUI.h chessLogic.h
+	$(CC) $(CFLAGS) -c client.c
+
+GUI.o: GUI.c GUI.h
+	$(CC) $(CFLAGS) -c GUI.c
+
+chessLogic.o: chessLogic.c chessLogic.h
+	$(CC) $(CFLAGS) -c chessLogic.c
 
 clean:
-	rm -f server client server.o client.o
+	rm -f *.o server client
