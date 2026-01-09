@@ -100,10 +100,10 @@ sequenceDiagram
         Black->>Server: "e7e5"
     end
 ```
-# How to Play
+## How to Play
 
--> run all the files using the command: make all
--> After that, you need at least 3 terminals:
+Execute all the files using the command: make all
+After that, you need at least 3 terminals runing:
 - In the first one you will run the command: ./server
 - In the othet two terminals you will run the command: ./client to be a player
 
