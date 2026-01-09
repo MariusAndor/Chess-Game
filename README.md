@@ -108,4 +108,7 @@ After that, you need at least 3 terminals runing:
 - In the othet two terminals you will run the command: ./client to be a player
 
 
+- An example of beta version for Chess Game (without graphic design) 
+<img width="1512" height="935" alt="Screenshot 2026-01-09 at 22 42 12" src="https://github.com/user-attachments/assets/83724150-afcb-4e05-9552-56a318ad43fb" />
+
 
